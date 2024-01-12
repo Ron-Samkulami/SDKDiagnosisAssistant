@@ -1,0 +1,16 @@
+PODS:
+  - SDKDiagnosisAssistant (0.1.0)
+
+DEPENDENCIES:
+  - SDKDiagnosisAssistant (from `../`)
+
+EXTERNAL SOURCES:
+  SDKDiagnosisAssistant:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  SDKDiagnosisAssistant: 63fb1d4d02e86f4c8857b4689ff9dfa2b14d878c
+
+PODFILE CHECKSUM: 88dbf766b8a42f48049f829fb3a517e56683483f
+
+COCOAPODS: 1.11.3

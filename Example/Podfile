@@ -1,0 +1,15 @@
+use_frameworks!
+
+platform :ios, '12.0'
+
+target 'SDKDiagnosisAssistant_Example' do
+  pod 'SDKDiagnosisAssistant', :path => '../'
+#  pod 'SDKDiagnosisAssistant/NetDiagnosis', :path => '../'
+  
+
+  target 'SDKDiagnosisAssistant_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

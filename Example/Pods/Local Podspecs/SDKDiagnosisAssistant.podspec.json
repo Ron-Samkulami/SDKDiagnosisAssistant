@@ -1,0 +1,32 @@
+{
+  "name": "SDKDiagnosisAssistant",
+  "version": "0.1.0",
+  "summary": "SDK诊断助手",
+  "description": "SDK诊断助手.",
+  "homepage": "https://github.com/Ron-Samkulami/SDKDiagnosisAssistant",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Ron-Samkulami": "huangxiongrong@37.com"
+  },
+  "source": {
+    "git": "https://github.com/Ron-Samkulami/SDKDiagnosisAssistant.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "12.0"
+  },
+  "static_framework": true,
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "NO",
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64"
+  },
+  "user_target_xcconfig": {
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64",
+    "OTHER_LDFLAGS": "-lc++"
+  },
+  "source_files": "SDKDiagnosisAssistant/Classes/**/*",
+  "public_header_files": "SDKDiagnosisAssistant/Classes/**/*.{h}"
+}

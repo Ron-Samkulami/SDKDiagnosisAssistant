@@ -1,0 +1,6 @@
+framework module SDKDiagnosisAssistant {
+  umbrella header "SDKDiagnosisAssistant-umbrella.h"
+
+  export *
+  module * { export * }
+}
