@@ -91,7 +91,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
     socket_client = socket(destination->sa_family, SOCK_DGRAM, isIPv6?IPPROTO_ICMPV6:IPPROTO_ICMP);
     int res = setsockopt(socket_client, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
     if (res < 0) {
-        log4cplus_warn("PhoneNetTracert", "tracert %s , set timeout error..\n", [ipAddress UTF8String]);
+        log4cplus_warn("RSTracert", "tracert %s , set timeout error..\n", [ipAddress UTF8String]);
     }
     
     // IPv6 must set IPV6_RECVPKTINFO on
@@ -99,7 +99,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
         int on = 1;
         int res = setsockopt(socket_client, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on));
         if (res < 0) {
-            log4cplus_warn("PhoneNetPing", "ping %s , set ipv6 receive on error..\n",[self.host UTF8String]);
+            log4cplus_warn("RSTracert", "tracert %s , set ipv6 receive on error..\n",[self.host UTF8String]);
         }
     }
     
@@ -121,7 +121,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
         }
         _host = ipAddress;
     } else {
-        log4cplus_warn("PhoneNetTracert", "access %s DNS error , remove this ip..\n",[host UTF8String]);
+        log4cplus_warn("RSTracert", "access %s DNS error , remove this ip..\n",[host UTF8String]);
     }
     
     if (_host == NULL) {
@@ -134,7 +134,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
 {
     if (![self verificationHost:host]) {
         [self stopTraceroute];
-        log4cplus_warn("PhoneNetTracert", "there is no valid domain in the domain list , traceroute complete..\n");
+        log4cplus_warn("RSTracert", "there is no valid domain in the domain list , traceroute complete..\n");
         return;
     }
     
@@ -157,7 +157,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
     int ttl = 1;
     int continuousLossPacketRoute = 0;
     RSTraceRouteRecICMPType rec = RSTraceRouteRecICMPType_noReply;
-    log4cplus_debug("PhoneNetTracert", "begin tracert ip: %s \n", [self.host UTF8String]);
+    log4cplus_debug("RSTracert", "begin tracert ip: %s \n", [self.host UTF8String]);
     do {
         int setTtlRes = setsockopt(socket_client,
                                    isIPv6 ? IPPROTO_IPV6 : IPPROTO_IP,
@@ -166,7 +166,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
                                    sizeof(ttl));
         
         if (setTtlRes < 0) {
-            log4cplus_debug("PhoneNetTracert", "set TTL for icmp packet error..\n");
+            log4cplus_debug("RSTracert", "set TTL for icmp packet error..\n");
         }
         
         uint16_t identifier = (uint16_t)(5000 +  ttl);
@@ -180,7 +180,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
             size_t sent = sendto(socket_client, packet, sizeof(RSICMPTraceRoutePacket), 0, (struct sockaddr *)destination, addrLen);
             
             if ((int)sent < 0) {
-                log4cplus_debug("PhoneNetTracert", "send icmp packet failed, error info :%s\n", strerror(errno));
+                log4cplus_debug("RSTracert", "send icmp packet failed, error info :%s\n", strerror(errno));
                 break;
             }
             rec = RSTraceRouteRecICMPType_noReply;
@@ -193,7 +193,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
             if (rec == RSTraceRouteRecICMPType_noReply && self.lastTraceRouteRecICMPType == RSTraceRouteRecICMPType_noReply) {
                 continuousLossPacketRoute++;
                 if (continuousLossPacketRoute == kTraceRouteMaxNoResCount * kTraceRoutePacketCountPerNode) {
-                    log4cplus_debug("PhoneNetTracert", "%d consecutive routes are not responding ,and end the tracert ip: %s\n", kTraceRouteMaxNoResCount, [self.host UTF8String]);
+                    log4cplus_debug("RSTracert", "%d consecutive routes are not responding ,and end the tracert ip: %s\n", kTraceRouteMaxNoResCount, [self.host UTF8String]);
                     rec = RSTraceRouteRecICMPType_Destination;
                     
                     record.dstIp = self.host;
@@ -219,7 +219,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
              !self.stopTraceFlag);
     
     if (rec == RSTraceRouteRecICMPType_Destination) {
-        log4cplus_debug("PhoneNetTracert", "done tracert , ip :%s \n", [self.host UTF8String]);
+        log4cplus_debug("RSTracert", "done tracert , ip :%s \n", [self.host UTF8String]);
         shutdown(socket_client, SHUT_RDWR);
         
         [self stopTraceroute];

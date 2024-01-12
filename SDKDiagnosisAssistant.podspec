@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
     
     s.homepage         = 'https://github.com/Ron-Samkulami/SDKDiagnosisAssistant'
     s.license          = { :type => 'MIT', :file => 'LICENSE' }
-    s.author           = { 'Ron-Samkulami' => '1402434985@qq.com' }
+    s.author           = { 'Ron-Samkulami' => 'ronsamkulami95@gmail.com' }
     s.source           = { :git => 'https://github.com/Ron-Samkulami/SDKDiagnosisAssistant.git', :tag => s.version.to_s }
     
     s.ios.deployment_target = '12.0'

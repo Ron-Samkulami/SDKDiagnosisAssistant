@@ -429,7 +429,9 @@ NSString *const RVManualFileLogLevelKey =   @"RVManualFileLogLevelKey";
     if (_floatWindow == nil)
     {
         //floatWindow 初始化
-        _floatWindow = [[RVDebugFloatWindow alloc] initWithFrame:CGRectMake(0, 200, 50, 50) mainBtnName:@"调试" titles:@[@"界面",@"预览",@"隐藏",@"清空"] bgcolor:[UIColor purpleColor]];
+        UIColor *color = [UIColor colorWithRed:0.1367 green:0.6445 blue:0.6992 alpha:1];//#23A5B3
+//        color = [UIColor colorWithRed:0.5391 green:0.3828 blue:0.5781 alpha:1];//#8A6294
+        _floatWindow = [[RVDebugFloatWindow alloc] initWithFrame:CGRectMake(0, 200, 50, 50) mainBtnName:@"调试" titles:@[@"界面",@"预览",@"隐藏",@"清空"] bgcolor:color];
         _window = [[RVDebugWindow alloc] init];
         _window.floatView = _floatWindow;
         [_window.rootViewController.view addSubview:_floatWindow];

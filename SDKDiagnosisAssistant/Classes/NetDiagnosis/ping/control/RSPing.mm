@@ -57,7 +57,7 @@
 {
     if (![self verificationHost:host]) {
         [self stopPing];
-        log4cplus_warn("PhoneNetPing", "There is no valid domain...\n");
+        log4cplus_warn("RSPing", "There is no valid domain...\n");
         return;
     }
     
@@ -87,7 +87,7 @@
 //        }
         _host = ipAddress;
     } else {
-       log4cplus_warn("PhoneNetPing", "access %s DNS error , remove this ip..\n",[host UTF8String]);
+       log4cplus_warn("Ping", "access %s DNS error , remove this ip..\n",[host UTF8String]);
     }
     
     if (_host == NULL) {
@@ -127,7 +127,7 @@
     }
     int res = setsockopt(socket_client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (res < 0) {
-        log4cplus_warn("PhoneNetPing", "ping %s , set timeout error..\n",[self.host UTF8String]);
+        log4cplus_warn("RSPing", "ping %s , set timeout error..\n",[self.host UTF8String]);
     }
     
     // IPv6 must set IPV6_RECVPKTINFO on
@@ -135,7 +135,7 @@
         int on = 1;
         int res = setsockopt(socket_client, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on));
         if (res < 0) {
-            log4cplus_warn("PhoneNetPing", "ping %s , set ipv6 receive on error..\n",[self.host UTF8String]);
+            log4cplus_warn("RSPing", "ping %s , set ipv6 receive on error..\n",[self.host UTF8String]);
         }
     }
 }
@@ -163,7 +163,7 @@
         ssize_t sent = sendto(socket_client, packet, sizeof(RSICMPPacket), 0, (struct sockaddr *)destination, length);
        
         if (sent < 0) {
-            log4cplus_warn("PhoneNetPing", "ping %s , send icmp packet error..\n",[self.host UTF8String]);
+            log4cplus_warn("RSPing", "ping %s , send icmp packet error..\n",[self.host UTF8String]);
         }
         
         isReceiverRemoteIpPingRes = [self receiverRemoteIpPingRes];
@@ -175,7 +175,7 @@
     } while (!self.stopPingFlag && index < _pingPacketCount && isReceiverRemoteIpPingRes);
     
     if (index == _pingPacketCount) {
-        log4cplus_debug("PhoneNetPing", "ping complete..\n");
+        log4cplus_debug("RSPing", "ping complete..\n");
         /*
          int shutdown(int s, int how); // s is socket descriptor
          int how can be:
@@ -213,7 +213,7 @@
         res = YES;
         
     } else if(bytesRead == 0) {
-        log4cplus_warn("PhoneNetPing", "ping %s , receive icmp packet error , bytesRead=0",[self.host UTF8String]);
+        log4cplus_warn("RSPing", "ping %s , receive icmp packet error , bytesRead=0",[self.host UTF8String]);
         
     } else {
         if ([RSNetDiagnosisHelper isValidICMPPingResponseWithBuffer:(char *)buffer length:(int)bytesRead identifier:identifier isIPv6:isIPv6]) {
@@ -221,7 +221,7 @@
             RSICMPPacket *icmpPtr = (RSICMPPacket *)[RSNetDiagnosisHelper icmpPacketFromBuffer:(char *)buffer length:(int)bytesRead isIPv6:isIPv6];
             int seq = OSSwapBigToHostInt16(icmpPtr->seq);
             int identifier = OSSwapBigToHostInt16(icmpPtr->identifier);
-            //FIXME: IPv6 hopLimit equals to seq, don't know why
+            //FIXME: IPv6 hopLimit look like seq, don't know why
             int ttl = isIPv6 ? ((RSNetIPv6Header *)buffer)->hopLimit : ((RSNetIPHeader *)buffer)->timeToLive;
             int size = isIPv6 ? (int)bytesRead : (int)(bytesRead-sizeof(RSNetIPHeader));
             

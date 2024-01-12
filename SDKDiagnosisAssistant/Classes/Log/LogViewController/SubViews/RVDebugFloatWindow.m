@@ -10,10 +10,13 @@
 #define animateDuration 0.3       //位置改变动画时间
 #define showDuration 0.1          //展开动画时间
 #define statusChangeDuration  3.0    //状态改变时间
-#define normalAlpha  0.8           //正常状态时背景alpha值
+#define normalAlpha  0.9           //正常状态时背景alpha值
 #define sleepAlpha  0.3           //隐藏到边缘时的背景alpha值
 #define myBorderWidth 1.0         //外框宽度
 #define marginWith  5             //间隔
+
+#define buttonColor [UIColor colorWithRed:0.9375 green:0.4609 blue:0.3008 alpha:1] //#F0764D
+//#define buttonColor [UIColor colorWithRed:0.8711 green:0.6601 blue:0.3789 alpha:1] //#DFA961
 
 @interface RVDebugFloatWindow()
 
@@ -86,7 +89,7 @@
     [_mainBtn setFrame:(CGRect){0, 0,self.frame.size.width, self.frame.size.height}];
     
     _mainBtn.alpha = sleepAlpha;
-    _mainBtn.backgroundColor = [UIColor brownColor];
+    _mainBtn.backgroundColor = buttonColor;
     [_mainBtn setTitle:mainBtnName forState:UIControlStateNormal];
     _mainBtn.titleLabel.font = [UIFont systemFontOfSize: self.frameWidth/5];
     [_mainBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
@@ -118,7 +121,7 @@
         button.titleLabel.font = [UIFont systemFontOfSize: self.frameWidth/5];
         button.layer.cornerRadius = button.frame.size.width/2;
         button.layer.masksToBounds = YES;
-        button.backgroundColor = [UIColor brownColor];
+        button.backgroundColor = buttonColor;
         
         button.tag = i;
         
