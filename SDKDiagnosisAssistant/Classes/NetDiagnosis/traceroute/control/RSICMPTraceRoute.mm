@@ -220,10 +220,12 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
     
     if (rec == RSTraceRouteRecICMPType_Destination) {
         log4cplus_debug("RSTracert", "done tracert , ip :%s \n", [self.host UTF8String]);
-        shutdown(socket_client, SHUT_RDWR);
-        
-        [self stopTraceroute];
+    } else {
+        log4cplus_debug("RSTracert", "exit tracert before destination, ip :%s \n", [self.host UTF8String]);
     }
+    
+    shutdown(socket_client, SHUT_RDWR);
+    [self stopTraceroute];
 }
 
 - (RSTraceRouteRecICMPType)receiverRemoteIpTracertRes:(int)ttl 
