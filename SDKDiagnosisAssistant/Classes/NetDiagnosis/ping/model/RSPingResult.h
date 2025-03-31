@@ -29,6 +29,5 @@ typedef NS_ENUM(NSInteger, RSPingStatus) {
 @property (nonatomic) NSInteger ICMPSequence;
 @property (nonatomic) RSPingStatus status;
 
-+ (NSDictionary *)pingResultWithPingItems:(NSArray *)pingItems;
 
 @end

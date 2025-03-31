@@ -13,6 +13,7 @@
 #import "RSNetDiagnosisHelper.h"
 
 #define KPingICMPIdBeginNum     8000
+#define KDefaultPingInterval    500
 
 @interface RSPing()
 {
@@ -23,7 +24,7 @@
 
 @property (nonatomic,assign) BOOL stopPingFlag;
 @property (nonatomic,assign) BOOL isPinging;
-@property (nonatomic,strong) NSString *host;
+@property (nonatomic,strong) NSString *ipAddress;
 @property (nonatomic,strong) NSDate   *sendDate;
 @property (nonatomic,assign) int pingPacketCount;
 @end
@@ -36,6 +37,7 @@
     if (self) {
         _stopPingFlag = NO;
         _isPinging = NO;
+        _pingInterval = KDefaultPingInterval;
     }
     return self;
 }
@@ -44,7 +46,7 @@
 {
     _stopPingFlag = YES;
     _isPinging = NO;
-    [self reportPingResWithSorceIp:self.host ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusFinished];
+    [self reportPingResFromIp:_ipAddress ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusFinished];
 }
 
 - (BOOL)isPinging
@@ -52,12 +54,12 @@
     return _isPinging;
 }
 
-- (void)startPingHosts:(NSString *)host 
+- (void)startPingHosts:(NSString *)host
            packetCount:(int)count
 {
     if (![self verificationHost:host]) {
         [self stopPing];
-        log4cplus_warn("RSPing", "There is no valid domain...\n");
+        log4cplus_warn("PhoneNetPing", "There is no valid domain...\n");
         return;
     }
     
@@ -85,12 +87,12 @@
 //                }
 //            }
 //        }
-        _host = ipAddress;
+        _ipAddress = ipAddress;
     } else {
-       log4cplus_warn("Ping", "access %s DNS error , remove this ip..\n",[host UTF8String]);
+       log4cplus_warn("PhoneNetPing", "access %s DNS error , remove this ip..\n",[host UTF8String]);
     }
     
-    if (_host == NULL) {
+    if (_ipAddress == NULL) {
         return NO;
     }
     return YES;
@@ -98,20 +100,20 @@
 
 - (void)buildICMPSocket {
     NSData *addrData = nil;
-    BOOL isIPv6 = [self.host rangeOfString:@":"].location != NSNotFound;
+    BOOL isIPv6 = [_ipAddress rangeOfString:@":"].location != NSNotFound;
     if (isIPv6) {
         struct sockaddr_in6 nativeAddr6;
         memset(&nativeAddr6,0,sizeof(nativeAddr6));
         nativeAddr6.sin6_len = sizeof(nativeAddr6);
         nativeAddr6.sin6_family = AF_INET6;
-        inet_pton(AF_INET6, self.host.UTF8String, &nativeAddr6.sin6_addr);
+        inet_pton(AF_INET6, _ipAddress.UTF8String, &nativeAddr6.sin6_addr);
         addrData = [NSData dataWithBytes:&nativeAddr6 length:sizeof(nativeAddr6)];
     } else {
         struct sockaddr_in nativeAddr4;
         memset(&nativeAddr4,0,sizeof(nativeAddr4));
         nativeAddr4.sin_len =sizeof(nativeAddr4);
         nativeAddr4.sin_family = AF_INET;
-        inet_pton(AF_INET, self.host.UTF8String, &nativeAddr4.sin_addr.s_addr);
+        inet_pton(AF_INET, _ipAddress.UTF8String, &nativeAddr4.sin_addr.s_addr);
         addrData = [NSData dataWithBytes:&nativeAddr4 length:sizeof(nativeAddr4)];
     }
     
@@ -127,7 +129,7 @@
     }
     int res = setsockopt(socket_client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (res < 0) {
-        log4cplus_warn("RSPing", "ping %s , set timeout error..\n",[self.host UTF8String]);
+        log4cplus_warn("PhoneNetPing", "ping %s , set timeout error..\n", _ipAddress.UTF8String);
     }
     
     // IPv6 must set IPV6_RECVPKTINFO on
@@ -135,7 +137,7 @@
         int on = 1;
         int res = setsockopt(socket_client, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on));
         if (res < 0) {
-            log4cplus_warn("RSPing", "ping %s , set ipv6 receive on error..\n",[self.host UTF8String]);
+            log4cplus_warn("PhoneNetPing", "ping %s , set ipv6 receive on error..\n", _ipAddress.UTF8String);
         }
     }
 }
@@ -163,7 +165,7 @@
         ssize_t sent = sendto(socket_client, packet, sizeof(RSICMPPacket), 0, (struct sockaddr *)destination, length);
        
         if (sent < 0) {
-            log4cplus_warn("RSPing", "ping %s , send icmp packet error..\n",[self.host UTF8String]);
+            log4cplus_warn("PhoneNetPing", "ping %s , send icmp packet error..\n", _ipAddress.UTF8String);
         }
         
         isReceiverRemoteIpPingRes = [self receiverRemoteIpPingRes];
@@ -171,11 +173,11 @@
         if (isReceiverRemoteIpPingRes) {
             index++;
         }
-        usleep(1000*500);
+        usleep(1000*_pingInterval);
     } while (!self.stopPingFlag && index < _pingPacketCount && isReceiverRemoteIpPingRes);
     
     if (index == _pingPacketCount) {
-        log4cplus_debug("RSPing", "ping complete..\n");
+        log4cplus_debug("PhoneNetPing", "ping complete..\n");
         /*
          int shutdown(int s, int how); // s is socket descriptor
          int how can be:
@@ -209,11 +211,11 @@
     }
     
     if (bytesRead < 0) {
-        [self reportPingResWithSorceIp:self.host ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusTimeout];
+        [self reportPingResFromIp:_ipAddress ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusTimeout];
         res = YES;
         
     } else if(bytesRead == 0) {
-        log4cplus_warn("RSPing", "ping %s , receive icmp packet error , bytesRead=0",[self.host UTF8String]);
+        log4cplus_warn("PhoneNetPing", "ping %s , receive icmp packet error , bytesRead=0", _ipAddress.UTF8String);
         
     } else {
         if ([RSNetDiagnosisHelper isValidICMPPingResponseWithBuffer:(char *)buffer length:(int)bytesRead identifier:identifier isIPv6:isIPv6]) {
@@ -221,38 +223,36 @@
             RSICMPPacket *icmpPtr = (RSICMPPacket *)[RSNetDiagnosisHelper icmpPacketFromBuffer:(char *)buffer length:(int)bytesRead isIPv6:isIPv6];
             int seq = OSSwapBigToHostInt16(icmpPtr->seq);
             int identifier = OSSwapBigToHostInt16(icmpPtr->identifier);
-            //FIXME: IPv6 hopLimit look like seq, don't know why
+            //FIXME: IPv6 hopLimit equals to seq, don't know why
             int ttl = isIPv6 ? ((RSNetIPv6Header *)buffer)->hopLimit : ((RSNetIPHeader *)buffer)->timeToLive;
             int size = isIPv6 ? (int)bytesRead : (int)(bytesRead-sizeof(RSNetIPHeader));
             
             NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:_sendDate];
             
-            NSString *sorceIp = self.host;
-            
-            [self reportPingResWithSorceIp:sorceIp ttl:ttl timeMillSecond:duration*1000 seq:seq icmpId:identifier dataSize:size pingStatus:RSPingStatusReceivePacket];
+            [self reportPingResFromIp:_ipAddress ttl:ttl timeMillSecond:duration*1000 seq:seq icmpId:identifier dataSize:size pingStatus:RSPingStatusReceivePacket];
             res = YES;
         } else {
-            [self reportPingResWithSorceIp:self.host ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusReceiveUnexpectedPacket];
+            [self reportPingResFromIp:_ipAddress ttl:0 timeMillSecond:0 seq:0 icmpId:0 dataSize:0 pingStatus:RSPingStatusReceiveUnexpectedPacket];
             res = YES;
         }
         
-        usleep(500);
+        usleep(_pingInterval);
     }
     
     return res;
 }
 
-- (void)reportPingResWithSorceIp:(NSString *)sorceIp 
+- (void)reportPingResFromIp:(NSString *)ipAddress
                              ttl:(int)ttl
                   timeMillSecond:(float)timeMillSec
-                             seq:(int)seq 
+                             seq:(int)seq
                           icmpId:(int)icmpId
-                        dataSize:(int)size 
+                        dataSize:(int)size
                       pingStatus:(RSPingStatus)status
 {
     RSPingResult *pingResModel = [[RSPingResult alloc] init];
     pingResModel.status = status;
-    pingResModel.IPAddress = sorceIp;
+    pingResModel.IPAddress = ipAddress;
     
     switch (status) {
         case RSPingStatusReceivePacket:
@@ -287,5 +287,10 @@
     
 }
 
-
+- (void)setPingInterval:(float)pingInterval {
+    _pingInterval = pingInterval;
+    if (pingInterval <= 0) {
+        _pingInterval = KDefaultPingInterval;
+    }
+}
 @end

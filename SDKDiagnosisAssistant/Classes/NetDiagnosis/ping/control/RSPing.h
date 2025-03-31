@@ -25,6 +25,9 @@
 
 @property (nonatomic,strong) id<RSPingDelegate> delegate;
 
+/// milisecond, default is 500 ms
+@property (nonatomic, assign) float pingInterval;
+
 - (void)startPingHosts:(NSString *)host packetCount:(int)count;
 
 - (void)stopPing;
