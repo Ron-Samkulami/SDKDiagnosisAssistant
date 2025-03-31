@@ -15,39 +15,74 @@
 
 #pragma mark - Resolve host
 + (NSArray<NSString *> *)resolveHost:(NSString *)hostname {
+//    NSMutableArray<NSString *> *resolve = [NSMutableArray array];
+//    CFHostRef hostRef = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostname);
+//    if (hostRef != NULL) {
+//        Boolean result = CFHostStartInfoResolution(hostRef, kCFHostAddresses, NULL); // 开始DNS解析
+//        if (result == true) {
+//            CFArrayRef addresses = CFHostGetAddressing(hostRef, &result);
+//            for(int i = 0; i < CFArrayGetCount(addresses); i++){
+//                CFDataRef saData = (CFDataRef)CFArrayGetValueAtIndex(addresses, i);
+//                struct sockaddr *addressGeneric = (struct sockaddr *)CFDataGetBytePtr(saData);
+//
+//                if (addressGeneric != NULL) {
+//                    switch (addressGeneric->sa_family) {
+//                        case AF_INET:
+//                        {
+//                            struct sockaddr_in *remoteAddr = (struct sockaddr_in *)CFDataGetBytePtr(saData);
+//                            [resolve addObject:[self formatIPv4Address:remoteAddr->sin_addr]];
+//                        }
+//                            break;
+//                        case AF_INET6:
+//                        {
+//                            struct sockaddr_in6 *remoteAddr6 = (struct sockaddr_in6 *)CFDataGetBytePtr(saData);
+//                            [resolve addObject:[self formatIPv6Address:remoteAddr6->sin6_addr]];
+//                        }
+//                            break;
+//                        default:
+//                            break;
+//                    }
+//
+//                }
+//            }
+//        }
+//    }
+//
+//    return [resolve copy];
+
     NSMutableArray<NSString *> *resolve = [NSMutableArray array];
-    CFHostRef hostRef = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostname);
-    if (hostRef != NULL) {
-        Boolean result = CFHostStartInfoResolution(hostRef, kCFHostAddresses, NULL); // 开始DNS解析
-        if (result == true) {
-            CFArrayRef addresses = CFHostGetAddressing(hostRef, &result);
-            for(int i = 0; i < CFArrayGetCount(addresses); i++){
-                CFDataRef saData = (CFDataRef)CFArrayGetValueAtIndex(addresses, i);
-                struct sockaddr *addressGeneric = (struct sockaddr *)CFDataGetBytePtr(saData);
-                
-                if (addressGeneric != NULL) {
-                    switch (addressGeneric->sa_family) {
-                        case AF_INET:
-                        {
-                            struct sockaddr_in *remoteAddr = (struct sockaddr_in *)CFDataGetBytePtr(saData);
-                            [resolve addObject:[self formatIPv4Address:remoteAddr->sin_addr]];
-                        }
-                            break;
-                        case AF_INET6:
-                        {
-                            struct sockaddr_in6 *remoteAddr6 = (struct sockaddr_in6 *)CFDataGetBytePtr(saData);
-                            [resolve addObject:[self formatIPv6Address:remoteAddr6->sin6_addr]];
-                        }
-                            break;
-                        default:
-                            break;
-                    }
-                    
-                }
-            }
-        }
+
+    struct addrinfo hints, *res, *p;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    int status = getaddrinfo([hostname UTF8String], NULL, &hints, &res);
+    if (status != 0) {
+        NSLog(@"getaddrinfo error: %s", gai_strerror(status));
+        return [resolve copy];
     }
-    
+
+    for (p = res; p != NULL; p = p->ai_next) {
+        char ipstr[INET6_ADDRSTRLEN];
+        void *addr;
+
+        if (p->ai_family == AF_INET) { // IPv4
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+        } else if (p->ai_family == AF_INET6) { // IPv6
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+            addr = &(ipv6->sin6_addr);
+        } else {
+            continue;
+        }
+
+        // convert pointer to string
+        inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+        [resolve addObject:[NSString stringWithUTF8String:ipstr]];
+    }
+
+    freeaddrinfo(res);
     return [resolve copy];
 }
 
