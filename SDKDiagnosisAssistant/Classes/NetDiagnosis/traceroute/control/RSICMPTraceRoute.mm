@@ -99,7 +99,7 @@ typedef NS_ENUM(NSUInteger, RSTraceRouteRecICMPType)
         int on = 1;
         int res = setsockopt(socket_client, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on));
         if (res < 0) {
-            log4cplus_warn("RSTracert", "tracert %s , set ipv6 receive on error..\n",[self.host UTF8String]);
+            log4cplus_warn("RSPing", "ping %s , set ipv6 receive on error..\n",[self.host UTF8String]);
         }
     }
     

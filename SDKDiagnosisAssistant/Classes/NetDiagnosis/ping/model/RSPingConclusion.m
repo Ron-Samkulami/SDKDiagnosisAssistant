@@ -7,6 +7,7 @@
 //
 
 #import "RSPingConclusion.h"
+#import "RSNetInfoUtils.h"
 
 @implementation RSPingConclusion
 
@@ -18,7 +19,6 @@
 + (instancetype)pingConclusionWithPingResults:(NSArray <RSPingResult *>*)pingResultArr
 {
     RSPingResult *firstRes = pingResultArr.firstObject;
-    NSString *address = [firstRes originalAddress];
     NSString *dst     = [firstRes IPAddress];
     
     NSMutableArray<RSPingResult *> *validPingResultArr = [NSMutableArray array];
@@ -61,6 +61,8 @@
     double standardDeviation = sqrt(varianceSum / validCount);
     
     
+    NSDictionary *ipInfo = [[RSNetInfoUtils shareInstance] getLocalIpAddress];
+    NSString *address = ipInfo[@"en0/ipv4"];
     if (address == NULL) {
         address = @"null";
     }
@@ -85,12 +87,12 @@
 - (instancetype)initWithDict:(NSDictionary *)dict
 {
     if (self = [super init]) {
-        self.src_ip = dict[@"src_ip"];
-        self.dst_host = dict[@"dst_host"];
-        self.dst_ip = dict[@"dst_ip"];
+        self.src_ip     = dict[@"src_ip"];
+        self.dst_host   = dict[@"dst_host"];
+        self.dst_ip     = dict[@"dst_ip"];
         self.totolPackets = [dict[@"totolPackets"] intValue];
         self.loss   = [dict[@"loss"] intValue];
-        self.avg  = [dict[@"avg"] floatValue];
+        self.avg    = [dict[@"avg"] floatValue];
         self.stddev = [dict[@"stddev"] floatValue];
         self.max    = [dict[@"max"] floatValue];
         self.min    = [dict[@"min"] floatValue];

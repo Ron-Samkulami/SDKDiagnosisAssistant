@@ -28,8 +28,14 @@
  */
 + (instancetype)pingConclusionWithPingResults:(NSArray <RSPingResult *>*)pingResultArr;
 
+/**
+ @discussion Dictionary must be conclusion info
+ */
 + (instancetype)pingConclusionWithDict:(NSDictionary *)dict;
 
+/**
+ @discussion Dictionary must be conclusion info
+ */
 - (instancetype)initWithDict:(NSDictionary *)dict;
 
 - (NSDictionary *)beanToDict;

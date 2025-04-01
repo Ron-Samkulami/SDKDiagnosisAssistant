@@ -126,7 +126,7 @@
         try {
             [pingItems addObject:pingRes];
         } catch (NSException *exception) {
-            log4cplus_warn("PhoneNetPing", "func: %s, exception info: %s , line: %d",__func__,[exception.description UTF8String],__LINE__);
+            log4cplus_warn("RSPing", "func: %s, exception info: %s , line: %d",__func__,[exception.description UTF8String],__LINE__);
         }
     }
     
