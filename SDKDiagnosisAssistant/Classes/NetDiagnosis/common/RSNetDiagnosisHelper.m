@@ -18,7 +18,7 @@
 //    NSMutableArray<NSString *> *resolve = [NSMutableArray array];
 //    CFHostRef hostRef = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostname);
 //    if (hostRef != NULL) {
-//        Boolean result = CFHostStartInfoResolution(hostRef, kCFHostAddresses, NULL); // 开始DNS解析
+//        Boolean result = CFHostStartInfoResolution(hostRef, kCFHostAddresses, NULL);
 //        if (result == true) {
 //            CFArrayRef addresses = CFHostGetAddressing(hostRef, &result);
 //            for(int i = 0; i < CFArrayGetCount(addresses); i++){
@@ -50,6 +50,9 @@
 //
 //    return [resolve copy];
 
+    /**
+     Qos warning might appear with previous method, try using following method. Don't forget to link libresolv.9.tdb
+     */
     NSMutableArray<NSString *> *resolve = [NSMutableArray array];
 
     struct addrinfo hints, *res, *p;

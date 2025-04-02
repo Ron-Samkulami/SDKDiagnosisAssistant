@@ -138,7 +138,7 @@
     if (ipAddress == NULL) {
         NSString *pingSummary = @"Ping failed with empty destination ip address";
         if (_pingResultHandler) _pingResultHandler(pingSummary, YES);
-        if (_pingConclusionHandler) _pingConclusionHandler(nil);
+        if (_pingConclusionHandler) _pingConclusionHandler([[RSPingConclusion alloc] init]);
         return;
     }
     

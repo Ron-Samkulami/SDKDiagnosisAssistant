@@ -84,6 +84,15 @@
 
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _loss = 100;
+    }
+    return self;
+}
+
 - (instancetype)initWithDict:(NSDictionary *)dict
 {
     if (self = [super init]) {
