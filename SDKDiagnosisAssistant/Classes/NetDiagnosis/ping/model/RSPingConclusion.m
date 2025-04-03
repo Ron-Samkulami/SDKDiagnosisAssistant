@@ -53,12 +53,16 @@
     }
     
     // caclute standardDeviation
-    double varianceSum = 0.0;
-    for (RSPingResult *pingRes in validPingResultArr) {
-        double diff = pingRes.timeMilliseconds - avgTime;
-        varianceSum += diff * diff;
+    
+    double standardDeviation = 0;
+    if (validCount > 0) {
+        double varianceSum = 0.0;
+        for (RSPingResult *pingRes in validPingResultArr) {
+            double diff = pingRes.timeMilliseconds - avgTime;
+            varianceSum += diff * diff;
+        }
+        standardDeviation = sqrt(varianceSum / validCount);
     }
-    double standardDeviation = sqrt(varianceSum / validCount);
     
     
     NSDictionary *ipInfo = [[RSNetInfoUtils shareInstance] getLocalIpAddress];

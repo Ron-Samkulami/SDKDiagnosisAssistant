@@ -15,6 +15,16 @@
 #define KPingICMPIdBeginNum     8000
 #define KDefaultPingInterval    500
 
+/**
+ * RSPing class handles ICMP ping operations for network diagnosis
+ * 
+ * This class provides functionality to:
+ * - Send ICMP echo requests to specified hosts
+ * - Receive and process ICMP echo responses
+ * - Support both IPv4 and IPv6
+ * - Report ping results through delegate methods
+ */
+
 @interface RSPing()
 {
     int socket_client;
@@ -68,8 +78,9 @@
     }
     
     [RSNetQueue rs_net_ping_async:^{
-        [self buildICMPSocket];
-        [self sendAndrecevPingPacket];
+        if ([self buildICMPSocket]) {
+            [self sendAndReceivePingPacket];
+        }
     }];
 }
 
@@ -98,7 +109,7 @@
     return YES;
 }
 
-- (void)buildICMPSocket {
+- (BOOL)buildICMPSocket {
     NSData *addrData = nil;
     BOOL isIPv6 = [_ipAddress rangeOfString:@":"].location != NSNotFound;
     if (isIPv6) {
@@ -125,7 +136,8 @@
     
     socket_client = socket(destination->sa_family, SOCK_DGRAM, isIPv6?IPPROTO_ICMPV6:IPPROTO_ICMP);
     if (socket_client < 0) {
-        NSLog(@"Error creating socket: %s\n", strerror(errno));
+        log4cplus_warn("RSPing", "Error creating socket: %s\n", strerror(errno));
+        return NO;
     }
     int res = setsockopt(socket_client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (res < 0) {
@@ -140,9 +152,10 @@
             log4cplus_warn("RSPing", "ping %s , set ipv6 receive on error..\n", _ipAddress.UTF8String);
         }
     }
+    return YES;
 }
 
-- (void)sendAndrecevPingPacket
+- (void)sendAndReceivePingPacket
 {
     if (_isPinging) {
         return;
@@ -154,7 +167,7 @@
     BOOL isIPv6 = destination->sa_family == AF_INET6;
     
     int index = 0;
-    BOOL isReceiverRemoteIpPingRes = NO;
+    BOOL isReceiveRemoteIpPingRes = NO;
     
     do {
         _sendDate = [NSDate date];
@@ -168,13 +181,13 @@
             log4cplus_warn("RSPing", "ping %s , send icmp packet error..\n", _ipAddress.UTF8String);
         }
         
-        isReceiverRemoteIpPingRes = [self receiverRemoteIpPingRes];
+        isReceiveRemoteIpPingRes = [self receiveRemoteIpPingRes];
         
-        if (isReceiverRemoteIpPingRes) {
+        if (isReceiveRemoteIpPingRes) {
             index++;
         }
         usleep(1000*_pingInterval);
-    } while (!self.stopPingFlag && index < _pingPacketCount && isReceiverRemoteIpPingRes);
+    } while (!self.stopPingFlag && index < _pingPacketCount && isReceiveRemoteIpPingRes);
     
     if (index == _pingPacketCount) {
         log4cplus_debug("RSPing", "ping complete..\n");
@@ -193,7 +206,7 @@
     
 }
 
-- (BOOL)receiverRemoteIpPingRes
+- (BOOL)receiveRemoteIpPingRes
 {
     BOOL isIPv6 = destination->sa_family == AF_INET6;
     BOOL res = NO;
@@ -245,9 +258,9 @@
 - (void)reportPingResFromIp:(NSString *)ipAddress
                              ttl:(int)ttl
                   timeMillSecond:(float)timeMillSec
-                             seq:(int)seq
+                             seq:(int)seq 
                           icmpId:(int)icmpId
-                        dataSize:(int)size
+                        dataSize:(int)size 
                       pingStatus:(RSPingStatus)status
 {
     RSPingResult *pingResModel = [[RSPingResult alloc] init];
